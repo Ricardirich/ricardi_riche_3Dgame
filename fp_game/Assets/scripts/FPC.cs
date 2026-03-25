@@ -1,3 +1,5 @@
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 public class FPC : MonoBehaviour
@@ -5,17 +7,31 @@ public class FPC : MonoBehaviour
 
     private CharacterController characterController;
     public float walkSpeed = 5;
-    public float sprintingSpeed = 35;
+    public float sprintingSpeed = 200;
 
     public float mouseSensitivity = 5;
 
     float verticalRotation;
 
     public float upDownangle = 80;
-   
 
-    private Camera cam;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public float pickUpRange = 2;
+
+    public Transform holdPoint;
+
+    private Vector3 currentMovement;
+
+    private Vector3 hitPoint;
+    public ParticleSystem impactPS;
+    [Range(10, 30)] public int particleCount = 20;
+
+    public float throwForce = 5;
+    private float gravity = 9.81f;
+
+   private Camera cam;
+   private Item heldItem;
+   public float jumpForce = 5;
+    
     void Start()
     {
 
@@ -30,21 +46,48 @@ public class FPC : MonoBehaviour
     {
         Movement();
         MouseLook();
-      
+        Jumping();
+        if (heldItem != null)
+        {
+            if (Input.GetMouseButtonDown(1))
+            {
+                heldItem.Throw(throwForce, cam.transform.forward);
+                heldItem = null;
+            }
+        }
+        
+
+        if (ObjectInFocus() != null)
+        {
+            float distanceToObject= Vector3.Distance(cam.transform.position, ObjectInFocus().transform.position);   
+            if(Input.GetMouseButtonDown(0))
+            {
+                impactPS.transform.position = hitPoint;
+                impactPS.Emit(particleCount);
+            }
+        if (distanceToObject <= pickUpRange && ObjectInFocus().GetComponent<Item>() != null) 
+            {
+                heldItem = ObjectInFocus().GetComponent<Item>();
+                heldItem.PickUp(cam.transform, holdPoint.position);
+            }
+        }
+        
     }
 
     void Movement()
     {
-        float sprintSPeed = Input.GetKey(KeyCode.LeftShift) ? sprintingSpeed: walkSpeed;
+        float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintingSpeed: walkSpeed;
 
         float vertInput = Input.GetAxis("Vertical");
         float horInput = Input.GetAxis("Horizontal");
-        float vertSpeed = vertInput * walkSpeed;
-        float horSpeed = horInput * walkSpeed;
+        float vertSpeed = vertInput * currentSpeed;
+        float horSpeed = horInput * currentSpeed ;
 
         Vector3 horizontalMovement = new Vector3(horSpeed, 0, vertSpeed);
         horizontalMovement = transform.rotation * horizontalMovement;
-        characterController.Move(horizontalMovement * Time.deltaTime);
+        currentMovement.x = horizontalMovement.x;
+        currentMovement.z = horizontalMovement.z;
+        characterController.Move(currentMovement * Time.deltaTime);
     }
 
     void MouseLook()
@@ -57,5 +100,32 @@ public class FPC : MonoBehaviour
         cam.transform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
     }
 
+    void Jumping ()
+    {
+        if ( characterController.isGrounded)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                currentMovement.y = jumpForce;
+            }
+
+        }
+        else
+        {
+            currentMovement.y -= gravity * Time.deltaTime;
+        }
+    }
+
+    public GameObject ObjectInFocus()
+    {
+        GameObject Result = null;
+        RaycastHit hit;
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit)) 
+        {
+            Result = hit.transform.gameObject;
+            hitPoint= hit.point;
+        }
+        return Result;
+    }
    
 }
