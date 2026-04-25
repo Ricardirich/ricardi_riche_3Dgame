@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -101,7 +102,7 @@ public class Enemy : MonoBehaviour
     {
         agent.SetDestination(targetWaypoint.position);
         float dist = Vector3.Distance(transform.position, targetWaypoint.position);
-        float buffer = 0.05f;
+        float buffer = 0.01f;
         if (dist <= buffer)
         {
             waypointIndex++;
@@ -112,5 +113,17 @@ public class Enemy : MonoBehaviour
         }
 
     }
+
+   private void OnTriggerEnter(Collider other)
+    {
+       if (other.CompareTag("Player"))
+       {
+           FPC playerScript = other.GetComponent<FPC>();
+           if (playerScript != null)
+           {
+             playerScript.DisableMovement();
+           }
+      }
+   }
 }
 

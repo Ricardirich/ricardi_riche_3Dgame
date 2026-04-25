@@ -30,8 +30,9 @@ public class FPC : MonoBehaviour
 
    private Camera cam;
    private Item heldItem;
-   public float jumpForce = 5;
-    
+   public float jumpForce = 5; 
+
+    private bool canMove = true;
     void Start()
     {
 
@@ -39,14 +40,19 @@ public class FPC : MonoBehaviour
         cam = Camera.main;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        Movement();
-        MouseLook();
-        Jumping();
+        if (canMove)
+        {
+            Movement();
+            MouseLook();
+            Jumping();
+        }
+        
         if (heldItem != null)
         {
             if (Input.GetMouseButtonDown(1))
@@ -127,5 +133,18 @@ public class FPC : MonoBehaviour
         }
         return Result;
     }
-   
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+       if(hit.gameObject.CompareTag("Enemy"))
+        {
+            DisableMovement();
+        }
+    }
+
+    public void DisableMovement()
+    {
+        canMove = false; 
+        currentMovement = Vector3.zero;
+    }
 }
