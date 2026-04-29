@@ -9,7 +9,8 @@ public class Enemy : MonoBehaviour
     private Vector3 targetPoint;
     private Vector3 directionToPlayer;
 
-   // public float rotationSpeed = 50;
+    private Vector3 lastKnownPosition;
+    // public float rotationSpeed = 50;
 
     public float viewAngle = 120;
     public float viewRange = 5;
@@ -29,21 +30,41 @@ public class Enemy : MonoBehaviour
     public float alertDuration = 5;
     private float timeSincedAlerted = 6;
 
+    private float timeWaited = 0;
+    public float waitDuration = 2;
+    private bool isWaiting = false;
+
+    public float walkSpeed =  1;
+    public float runSpeed = 3; 
     private NavMeshAgent agent;
     
 
     void Start()
     {
        // controller = GetComponent<CharacterController>();
-       agent = GetComponent<NavMeshAgent>();    
-        
+       agent = GetComponent<NavMeshAgent>();
+        setNextTargetWaypoint(true);
+    }
+    private void setNextTargetWaypoint(bool firstTime = false)
+    {
+        if (!firstTime)
+        {
+            waypointIndex++;
+        }
+       
+        if (waypointIndex >= waypoint.Length)
+        {
+            waypointIndex = 0;
+        }
+        targetWaypoint = waypoint[waypointIndex];
+        agent.SetDestination(targetWaypoint.position);
     }
 
     // Update is called once per frame
     void Update()
 
     {
-        targetWaypoint= waypoint[waypointIndex];
+      
 
        Debug.DrawRay(transform.position,transform.forward,Color.blue);
         //targetPoint = new Vector3(player.position.x, transform.position.y, player.position.z);
@@ -51,8 +72,9 @@ public class Enemy : MonoBehaviour
         Quaternion rot = Quaternion.LookRotation(directionToPlayer);
         if (playerDetected())
         {
-            patrolling = false;
-            agent.SetDestination(player.position);
+            lastKnownPosition = player.position;
+ 
+         agent.SetDestination(lastKnownPosition);
            // transform.localRotation = Quaternion.RotateTowards(transform.localRotation, rot, agent.angularSpeed* Time.deltaTime);
         }
         if(patrolling)
@@ -70,6 +92,7 @@ public class Enemy : MonoBehaviour
                 playerFound = false;
                 timeSincedAlerted = 0;
                 patrolling = true;
+                setNextTargetWaypoint(true);
             }
         }
 
@@ -79,8 +102,9 @@ public class Enemy : MonoBehaviour
     }
 
     private bool playerDetected ()
-    { 
+    {
        
+
         bool result = false;
         float angle = Vector3.Angle(transform.forward, directionToPlayer);
 
@@ -95,23 +119,33 @@ public class Enemy : MonoBehaviour
         {
             result = true ;
         }
-
+        agent.speed = playerFound ? runSpeed : walkSpeed;
         return result;
     }
     private void patrol()
     {
-        agent.SetDestination(targetWaypoint.position);
+
         float dist = Vector3.Distance(transform.position, targetWaypoint.position);
-        float buffer = 0.01f;
-        if (dist <= buffer)
+        float buffer = 0.25f;
+        if (dist <= buffer && !isWaiting)
         {
-            waypointIndex++;
-            if (waypointIndex >= waypoint.Length)
+            //setNextTargetWaypoint();
+            isWaiting = true;
+        }
+        if (isWaiting)
+        {
+            if (timeWaited < waitDuration)
             {
-                waypointIndex = 0;
+                timeWaited += Time.deltaTime;
+            }
+            else
+            {
+               setNextTargetWaypoint();
+                timeWaited = 0;
+                isWaiting = false;
+               
             }
         }
-
     }
 
    private void OnTriggerEnter(Collider other)
