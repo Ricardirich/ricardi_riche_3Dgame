@@ -22,8 +22,10 @@ public class FPC : MonoBehaviour
     private Vector3 currentMovement;
 
     private Vector3 hitPoint;
-    public ParticleSystem impactPS;
-    [Range(10, 30)] public int particleCount = 20;
+   // public ParticleSystem impactPS;
+    /// <summary>
+    /// [Range(10, 30)] public int particleCount = 20;
+    /// </summary>
 
     public float throwForce = 5;
     private float gravity = 9.81f;
@@ -68,8 +70,8 @@ public class FPC : MonoBehaviour
             float distanceToObject= Vector3.Distance(cam.transform.position, ObjectInFocus().transform.position);   
             if(Input.GetMouseButtonDown(0))
             {
-                impactPS.transform.position = hitPoint;
-                impactPS.Emit(particleCount);
+               // impactPS.transform.position = hitPoint;
+               // impactPS.Emit(particleCount);
             }
         if (distanceToObject <= pickUpRange && ObjectInFocus().GetComponent<Item>() != null) 
             {
