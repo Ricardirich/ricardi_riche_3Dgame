@@ -159,5 +159,15 @@ public class Enemy : MonoBehaviour
            }
       }
    }
+    public void AlertEnemy(Transform target)
+    {
+        player = target;
+        playerFound = true;
+        patrolling = false;
+        lastKnownPosition = player.position;
+        agent.speed = runSpeed;
+        agent.SetDestination(lastKnownPosition);
+       
+    }
 }
 
