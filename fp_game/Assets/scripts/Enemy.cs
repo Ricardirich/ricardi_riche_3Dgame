@@ -35,9 +35,12 @@ public class Enemy : MonoBehaviour
     private bool isWaiting = false;
 
     public float walkSpeed =  1;
-    public float runSpeed = 3; 
+    public float runSpeed = 7; 
     private NavMeshAgent agent;
-    
+
+    public AudioSource detectionSound;
+    private bool hasPlayedDetectionSound = false;
+
 
     void Start()
     {
@@ -85,10 +88,12 @@ public class Enemy : MonoBehaviour
         {
             if (timeSincedAlerted < alertDuration)
             {
+                detectionSound.Play();
                 timeSincedAlerted += Time.deltaTime;
             }
             else
             {
+                detectionSound.Stop();
                 playerFound = false;
                 timeSincedAlerted = 0;
                 patrolling = true;
